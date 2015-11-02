@@ -1,5 +1,6 @@
 package com.lesfurets.anagram;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashSet;
@@ -12,6 +13,7 @@ public class AnagramJava7Test {
 
     Anagram anagram = new AnagramJava7();
 
+    @Ignore
     @Test
     public void should_return_nothing_when_no_anagram_in_candidates() throws Exception {
         // Given
