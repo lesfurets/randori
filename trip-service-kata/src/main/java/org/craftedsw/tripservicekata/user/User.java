@@ -21,7 +21,11 @@ public class User {
 	public void addTrip(Trip trip) {
 		trips.add(trip);
 	}
-	
+
+	public boolean isFriendWith(User user) {
+		return friends.contains(user);
+	}
+
 	public List<Trip> trips() {
 		return trips;
 	}
