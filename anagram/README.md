@@ -17,4 +17,4 @@ Anagram : A word formed from another by rearranging its letters: `"Angel"` is an
 
 Open questions :
 
-* How manage invalide inputs ? (null inputs or empty word)
+* How manage invalid inputs ? (null inputs or empty word)
