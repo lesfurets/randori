@@ -3,8 +3,10 @@ package com.lesfurets.anagram;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.StrictAssertions.catchThrowable;
+
 import java.util.HashSet;
 import java.util.Set;
+
 import org.junit.Test;
 
 public class AnagramJava8Test {
@@ -28,6 +30,19 @@ public class AnagramJava8Test {
         return new HashSet<>(asList(strings));
     }
 
+    @Test
+    public void should_detect_anagram_in_minimal_candidate() {
+        // Given
+        String word = "ga";
+        Set<String> candidates =
+                        setOf("ag");
+
+        // When
+        Set<String> anagrams = anagram.anagrams(word, candidates);
+
+        // Then
+        assertThat(anagrams).containsOnly("ag");
+    }
     @Test
     public void should_detect_anagram_in_candidate() {
         // Given
