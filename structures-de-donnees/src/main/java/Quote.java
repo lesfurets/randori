@@ -41,4 +41,24 @@ public class Quote {
                         ", partner='" + partner + '\'' +
                         '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        Quote quote = (Quote) o;
+
+        return Objects.equals(email,quote.email)
+                        && Objects.equals(partner, quote.partner)
+                        && Objects.equals(date, quote.date);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(email, partner, date);
+    }
 }
