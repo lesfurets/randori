@@ -11,6 +11,7 @@
   <modules>
     <module>anagram</module>
     <module>trip-service-kata</module>
+    <module>structures-de-donnees</module>
   </modules>
 
 </project>
