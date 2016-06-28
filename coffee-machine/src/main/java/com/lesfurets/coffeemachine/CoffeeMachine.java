@@ -4,7 +4,7 @@ import com.lesfurets.coffeemachine.model.EDrink;
 
 class CoffeeMachine {
 
-    static String makeCoffee(EDrink drink, int sugar) {
+    static String makeCoffee(EDrink drink, int nbSugar) {
         String output = "";
         switch (drink) {
             case COFFEE:
@@ -18,14 +18,13 @@ class CoffeeMachine {
                 break;
         }
         output += ":";
-        if (sugar >= 1) {
-            output += sugar;
+        if (nbSugar >= 1) {
+            output += nbSugar;
         }
         output += ":";
-        if (sugar >= 1) {
+        if (nbSugar >= 1) {
             output += "0";
         }
         return output;
     }
-
 }
