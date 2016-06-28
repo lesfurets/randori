@@ -12,6 +12,7 @@
     <module>anagram</module>
     <module>trip-service-kata</module>
     <module>structures-de-donnees</module>
+    <module>coffee-machine</module>
   </modules>
 
 </project>
