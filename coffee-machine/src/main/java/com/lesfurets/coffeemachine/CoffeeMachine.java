@@ -4,8 +4,6 @@ import com.lesfurets.coffeemachine.model.EDrink;
 
 class CoffeeMachine {
 
-    private EDrink drink;
-
     static String makeCoffee(EDrink drink, int sugar) {
         String output = "";
         switch (drink) {
@@ -30,11 +28,4 @@ class CoffeeMachine {
         return output;
     }
 
-    public EDrink getDrink() {
-        return drink;
-    }
-
-    public void setDrink(EDrink drink) {
-        this.drink = drink;
-    }
 }
