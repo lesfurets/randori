@@ -1,23 +1,26 @@
 package com.lesfurets.coffeemachine;
 
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import static com.lesfurets.coffeemachine.CoffeeMachine.makeCoffee;
+import static com.lesfurets.coffeemachine.model.EDrink.CHOCOLATE;
+import static com.lesfurets.coffeemachine.model.EDrink.COFFEE;
+import static com.lesfurets.coffeemachine.model.EDrink.TEA;
+import static org.assertj.core.api.StrictAssertions.assertThat;
 
-import com.lesfurets.coffeemachine.model.EDrink;
+import org.junit.Test;
 
 public class CoffeeMachineTest {
     @Test
-    public void tea_with_1_sugar_should_return_T_1_0() throws Exception {
-        Assertions.assertThat(CoffeeMachine.makeCoffee(EDrink.TEA, 1)).isEqualTo("T:1:0");
+    public void tea_with_1_sugar_should_return_T_1_0() {
+        assertThat(makeCoffee(TEA, 1)).isEqualTo("T:1:0");
     }
 
     @Test
-    public void chocolate_with_no_sugar_should_return_H_0() throws Exception {
-        Assertions.assertThat(CoffeeMachine.makeCoffee(EDrink.CHOCOLATE, 0)).isEqualTo("H::");
+    public void chocolate_with_no_sugar_should_return_H_0() {
+        assertThat(makeCoffee(CHOCOLATE, 0)).isEqualTo("H::");
     }
 
     @Test
-    public void coffee_with_2_sugar_should_return_C_2_0() throws Exception {
-        Assertions.assertThat(CoffeeMachine.makeCoffee(EDrink.COFFEE, 2)).isEqualTo("C:2:0");
+    public void coffee_with_2_sugar_should_return_C_2_0() {
+        assertThat(makeCoffee(COFFEE, 2)).isEqualTo("C:2:0");
     }
 }
