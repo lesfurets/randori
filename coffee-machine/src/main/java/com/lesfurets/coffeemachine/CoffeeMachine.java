@@ -7,11 +7,7 @@ class CoffeeMachine {
     private EDrink drink;
 
     static String makeCoffee(EDrink drink, int sugar) {
-        String output = drink.getCode() + ":" + (sugar > 0 ? sugar : "");
-        output += ":";
-        if (sugar >= 1) {
-            output += "0";
-        }
+        String output = drink.getCode() + ":" + (sugar > 0 ? sugar + ":0" : ":");
         return output;
     }
 
