@@ -1,7 +1,7 @@
-# Jenkins pipelines by LF
+# Jenkins pipelines by LF   
 
 ## Pré-requis
-* Docker 2.3.6 minimum
+* Docker 1.13.0 minimum
 * Pour développer, IntelliJ ou au minimum groovyConsole
 * Un accès au moins en read-only à github
 * Un token pour slack (OK chez LF)
@@ -18,11 +18,8 @@ IntelliJ has a groovy console: Actions... / Groovy Console
     println gs // displays aaa3
     
     """This is a multiline String
-    this is very useful
-    because you can include JSON:
-    {
-      "node": "value"
-    }"""
+    It can be useful to write a long text
+    even with string substitution like ${aaa}"""
 
 ### Map and lists
 Easy way to define a map:
@@ -61,13 +58,25 @@ And a list:
     
 
 ## Jenkins pipelines
-Jenkins docker image: https://hub.docker.com/_/jenkins/
+Pour ce randori, on pourra utiliser une image docker Jenkins.
+Une version maison a été poussée sur nexus, elle contient la 
+version officielle complétée d'une petite série de plugins.
 
+### Let's play in a docker
+    # Dossier dans lequel tous le workspace jenkins sera placé
+    mkdir -p $HOME/dev/jenkins/docker-home/jobs/job1
+    cp resources/firstJob.xml $HOME/dev/jenkins/docker-home/jobs/job1/config.xml
     docker pull jenkins:alpine
-    mkdir -p $HOME/dev/jenkins/docker-home/
-    docker run -p 8080:8080 -p 50000:50000 -v $HOME/dev/jenkins/docker-home/:/var/jenkins_home jenkins:alpine
+    # Déploie l'image docker de jenkins-LF dans un container docker
+    docker run -p 8080:8080 -v $HOME/dev/jenkins/docker-home/:/var/jenkins_home equ/jenkins-plugins:devel
+
+[Jenkins est déployé sur le port 8080](http://localhost:8080)
+
+**TODO** Update la commande pour récupérer l'image ??? **TODO** 
 
 ### Exemple de Pipeline Jenkins
+Un premier exemple simpliste de pipeline Jenkins :
+
     stage('etape 1'){
         parallel(
             firstBranch: {
@@ -92,22 +101,49 @@ Jenkins docker image: https://hub.docker.com/_/jenkins/
         }
     }
 
-# TODO
-Expliquer le NonCPS/CompileStatic/Jenkins Security
+## Quelques points d'attention
+Jenkins permet de faire l'essentiel des fonctions groovy, et ajoute quelques fonctions, comme :
+* ```node``` pour exécuter du code dans un agent Jenkins
+* ```stage``` pour créer une sorte d'étape visuelle dans le pipeline
+* ```parallel``` pour paralléliser des tâches
+* ```sh``` pour exécuter une commande sh
+* ```checkout``` pour faire un clone d'un scm
+La liste est longue et peut être complétée par les différents plugins qu'on ajoute à Jenkins
+
+### Groovy Sandboxing
+
+    If some script authors are “regular users” with only more limited permissions,
+    such as Job/Configure, it is inappropriate to let them run arbitrary scripts
+
+Objectif : empêcher les utilisateurs d'exécuter des commandes critiques depuis leurs scripts.
+
+Lorsqu'on appelle des fonctions/méthodes encore non autorisées, Jenkins force une erreur sur les jobs
+qui essaient de les exécuter et ajoute les dites fonctions à une liste d'attente des fonctions à 
+valider. Un administrateur peut les valider.
+
+La page de validation est ici :
+http://localhost:8080/scriptApproval/
+
+[Documentation complète](https://wiki.jenkins-ci.org/display/JENKINS/Script+Security+Plugin)
+
+### @NonCPS
+Jenkins a l'habitude à chaque instruction d'enregistrer toutes les variables locales dans un fichier.
+Cela lui permet en cas de panne, de relancer les agents là où ils s'étaient arrêtés.
+
+Or certains objets ne sont pas sérialisables. Si vous affectez un objet non sérialisable à une
+variable, une erreur surviendra. Pour contourner cette difficulté :
+ * soit vous n'enregistrez pas ces objets dans une variable
+ * soit vous rendez la méthode `@NonCPS`
+ 
+Une méthode ayant l'annotation `@NonCPS` :
+* sera exécutée d'une traîte, sans enregistrer les états intermédiaires
+* ne pourra pas lancer de commandes Jenkins telles que `sh`, `git`, `input`, `stage`, `node`...
 
 ## Les pipelines Jenkins chez LF
 ### Objectif
 * Un job pour lister toutes branches d'un repo qui n'ont pas été modifiées depuis plus de N jours.
 * Des tests de non-régression.
 * Extra : notifier par slack chaque auteur de la branche si celle-ci a plus d'un mois d'ancienneté.
-
-### Let's play in a docker
-    # Dossier dans lequel tous le workspace jenkins sera placé
-    mkdir $HOME/dev/jenkins/docker-home2
-    # Déploie l'image docker de jenkins dans un container docker
-    docker run -p 8080:8080 -p 50000:50000 -v $HOME/dev/jenkins/docker-home2/:/var/jenkins_home equ/jenkins-plugins:devel
-
-[Jenkins est déployé sur le port 8080](http://localhost:8080)
 
 ### Structure des jobs chez LF
     TODO avec le deploy
