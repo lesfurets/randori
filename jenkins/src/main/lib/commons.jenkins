@@ -1,0 +1,390 @@
+#!groovy
+/**
+ * production/jenkins/src/main/jenkins/lib/commons.jenkins
+ *
+ * File to gather common declarations for all other scripts
+ *
+ * Usage : import this script as mentioned in scriptLoader.jenkins
+ *
+ */
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+
+/**
+ * GIT configurations
+ */
+
+/**
+ * @return GIT config for devteam-tools
+ */
+def gitTools() {
+    return defaultGit('master', 'devteam-tools')
+}
+
+/**
+ * @return GIT config for lesfurets-infra
+ */
+def gitInfra() {
+    return defaultGit('master', 'lesfurets-infra')
+}
+
+/**
+ * GIT config for lesfurets, depth history of the clone will be truncated to the latest commit of each branch.
+ * Tags will be not be retrieved.
+ * @param scmBranch branch
+ * @param repository repository (studies or features)
+ * @return git config for LesFurets project
+ */
+def gitLF(String scmBranch, String repository) {
+    return defaultGit(scmBranch, 'lesfurets-' + repository, 0, repository)
+}
+
+/**
+ * GIT config for lesfurets, with full git history and all tags
+ * @param scmBranch branch
+ * @param repository repository (studies or features)
+ * @return git config for LesFurets project
+ */
+def gitFullLF(String scmBranch, String repository) {
+    return defaultGit(scmBranch, 'lesfurets-' + repository, null, repository)
+}
+
+/**
+ * GIT config for any gitlab project
+ * @param scmBranch branch
+ * @param repository full name of the project (ex : devteam-tools, lesfurets-studies)
+ * @param depth history of the clone will be truncated to this number of commits (see git clone --help),
+ * tags will be ignored as well. Use null if you want a full checkout
+ * @param remoteName override name of the remote config
+ * @return git config for the project
+ */
+private def defaultGit(String scmBranch, String repository, Integer depth = 0, String remoteName = null) {
+    return gitForUrl(scmBranch, "git@gitlab.admin.courtanet.net:devteam/${repository}.git", depth, remoteName)
+}
+
+/**
+ * GIT config for any GIT project
+ * @param scmBranch branch
+ * @param repositoryUrl full git repository URL (ex : gitlab.admin.courtanet.net:devteam/lesfurets-studies.git)
+ * @param depth history of the clone will be truncated to this number of commits (see git clone --help),
+ * tags will be ignored as well. Use null if you want a full checkout
+ * @param remoteName override name of the remote config
+ * @return git configuration for the git project
+ */
+def gitForUrl(String scmBranch, String repositoryUrl, Integer depth = 0, String remoteName = null) {
+    def remoteConf = [
+            url: repositoryUrl
+    ]
+    if (remoteName) {
+        remoteConf.name = remoteName
+    }
+    if (depth != null) {
+        println "Warning, git clone will be truncated to ${depth} commits and tags will be ignored."
+    }
+    def extensions = depth == null ? [] : [[$class: 'CloneOption', depth: depth, noTags: true, reference: '', shallow: true]]
+    [
+            $class                           : 'GitSCM',
+            branches                         : [[name: scmBranch]],
+            doGenerateSubmoduleConfigurations: false,
+            extensions                       : extensions,
+            submoduleCfg                     : [],
+            userRemoteConfigs                : [remoteConf]
+    ]
+}
+
+def shallowGitFrom(def scm) {
+    return [
+            $class: 'GitSCM',
+            branches: scm.branches,
+            doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+            extensions: [[$class: 'CloneOption', depth: 0, noTags: true, reference: '', shallow: true]],
+            userRemoteConfigs: scm.userRemoteConfigs
+    ]
+}
+
+def fullGitFrom(def scm) {
+    return [
+            $class: 'GitSCM',
+            branches: scm.branches,
+            doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+            extensions: [],
+            userRemoteConfigs: scm.userRemoteConfigs
+    ]
+}
+
+/**
+ * Cleans a name and replaces all characters other than A-Za-z0-9 with "_", and all capitalizing all characters
+ * @param s name to clean
+ * @return clean name
+ */
+@NonCPS
+private static String cleanName(String s) {
+    return s.replaceAll(/\W/, '_').toUpperCase()
+}
+
+/**
+ * Declare an optional stage
+ *
+ * Useful to let the Jenkins user to disable some stage.
+ *
+ * The stage will be executed if at least one of the condition is fulfilled
+ * <ul>
+ *     <li>if ENABLE_{STAGE_NAME} is not declared in the job</li>
+ *     <li>if ENABLE_{STAGE_NAME} is true in the job</li>
+ * </ul>
+ *
+ * Thus, when using optionalStage, you are supposed to declare a new property with a default value as true,
+ * but if you forget the property declaration, the stage will be run anyway. The only case the stage will not be
+ * executed is when you declare this property as false.
+ *
+ * Warning! The property ENABLE_{STAGE_NAME} cleans the stage name with the help of the cleanName method,
+ * keep that in mind when declaring your property in the job.
+ *
+ * Usages examples :
+ * {@code
+ * def commons = load('production/jenkins/lib/commons.jenkins')
+ *
+ *    commons.optionalStage('myStage1') {
+ *        node('light') {
+ *            echo 'AAA'
+ *        }
+ *    }
+ *
+ *    commons.optionalStage('myStage2') {
+ *        node('light') {
+ *            echo 'AAA'
+ *        }
+ *    }
+ *
+ *
+ *}
+ *
+ * @param stageName name of the stage to be executed
+ * @param stageClosure closure to be executed when required
+ */
+void optionalStage(String stageName, Closure stageClosure) {
+    stage(stageName) {
+        try {
+            if (this."ENABLE_${cleanName(stageName)}" == 'false') {
+                println "lib/commons.jenkins - Le stage $stageName a été ignoré (${cleanName(stageName)} = false)"
+                return
+            }
+        }
+        catch (Exception e) {
+            // The ENABLE_${cleanName(stageName)} property is not declared in the job
+            // The stage will be executed
+        }
+        stageClosure()
+    }
+}
+
+/**
+ * Returns the version of a property inside a maven pom.
+ * To get the module version, use the "version" property name.
+ *
+ * If the property is defined twice in the pom, the first one will be returned.
+ *
+ * @param pom le chemin vers le pom
+ * @param property name of the property to retrieve
+ * @return the version
+ */
+def versionForPom(pom, property) {
+    def matcher = readFile(pom) =~ "<$property>(.+)</$property>"
+    matcher ? matcher[0][1] : null
+}
+
+/**
+ * Returns the jira link for a branch name
+ * @param branchName a valid branch name, starting with the jira ticket id
+ * @return the jira URL for the branch name
+ */
+String jiraLinkForBranch(String branchName) {
+    return "http://jira.lan.courtanet.net/browse/${jiraTicketForBranch(branchName)}"
+}
+
+/**
+ * Returns the jira ticket for the branch
+ * @param branchName name of the branch, starting with the jira ticket id
+ * @return jira link to the current branch
+ */
+String jiraTicketForBranch(String branchName) {
+    def m = branchName =~ /(^[A-Z]+-[0-9]+)/
+    return m.find() ? m[0][0] : branchName
+}
+
+/**
+ * Returns the trigramm from an email
+ * If email matches format aaa@lesfurets.com, returns aaa
+ * If email matches format abc.def@lesfurets.com, returns ade
+ * Falls back to the full username before the @
+ */
+private String extractTrigrammFromEmail(String email) {
+    String username = email.split('@')[0]
+    if (username.length() == 3) {
+        return username.toLowerCase()
+    }
+    def parts = username.split('\\.')
+    if (parts.size() < 2) {
+        return username
+    }
+    return parts[0].substring(0, 1) + parts[1].substring(0, 2).toLowerCase()
+}
+
+/**
+ * @return gitlab api base url
+ */
+private String gitlabApiUrl() {
+    return "http://gitlab.admin.courtanet.net/api/v3"
+}
+
+/**
+ * Fetch the details of the current revision from gitlab
+ * @param repository gitlab repository (studies or features)
+ * @param branchName name of the branch
+ * @return the UNSERIALIZED map with branch details
+ */
+Map getBranchDefinitionFromGitlabAPI(String repository, String branchName) {
+    withCredentials([string(credentialsId: 'gitlab_token', variable: 'GITLAB_TOKEN')]) {
+        // gitlab repository id for lesfurets-features
+        def repositoryId = 2
+        if (repository == "studies") {
+            // gitlab repository id for lesfurets-studies
+            repositoryId = 3
+        }
+        def url ="${gitlabApiUrl()}/projects/$repositoryId/repository/branches/$branchName"
+        String jsonReturn = sh(returnStdout: true, script: "curl --header 'PRIVATE-TOKEN: $GITLAB_TOKEN' $url").trim()
+        return new JsonSlurper().parseText(jsonReturn)
+    }
+}
+
+/**
+ * Returns the author trigraph of the latest commit.
+ *
+ * If the author name is a trigraph, returns the author name.
+ * If the left side of the author email is a trigraph returns it.
+ * If there is a dot in the email, returns the first letter of the part before the dot,
+ * and the two letters of the part after the dot.
+ * Falls back on the email username
+ *
+ * @return a trigraph
+ */
+String lastCommitterTrigraph(Map branchDef) {
+    String name = branchDef.commit.author_name
+    if (name.length() == 3) {
+        return name
+    }
+    String userMail = branchDef.commit.author_email
+    return extractTrigrammFromEmail(userMail)
+}
+
+
+/**
+ * Returns the current scm revision. Be sure you are in a git context.
+ * @return the sha1 of the revision (full format)
+ */
+String currentRevision() {
+    return sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+}
+
+/**
+ * Returns the URL of the gitlab webpage of the current revision
+ * @param repository name of the git repository (lesfurets-studies, lesfurets-features...)
+ * @return gitlab webpage URL for the current revision
+ */
+String gitlabBaseUrl(String repository, String currentRevision) {
+    return "http://gitlab.admin.courtanet.net/devteam/${repository}/commit/${currentRevision}/"
+}
+
+/**
+ * Lesfurets specific - extracts the kind of repository (studies or features) from a git URL
+ * @param gitUrl full GIT url (ex: gitlab.admin.courtanet.net:devteam/lesfurets-studies.git)
+ * @return studies or features
+ */
+String extractLfRepoFromGitUrl(String gitUrl) {
+    return gitUrl.contains('features') ? 'features' : 'studies'
+}
+
+/**
+ * Triggers a slack notification.
+ * The slack attachment is used to add a colored border to the slack notification.
+ * Use the following syntax to insert a link in the attachment text :
+ * <pre>
+ * {@code
+ *     <http://lien|Texte du lien>
+ *}
+ * </pre>
+ *
+ * The attachment title will be <pre>{Job name}{Job execution id}</pre>
+ * Le titre de "l'attachment" sera automatiquement le nom du job suivi du numéro d'exécution
+ *
+ * @see {@link https://api.slack.com/docs/message-formatting}
+ * @param channel specify the channel to be notified (use @user or #channel)
+ * @param notificationTitle title of the slack notification (before the attachment)
+ * @param attachmentText content text of the attachment
+ * @param attachmentColor color of the attachment border
+ */
+void notifySlack(String channel, String notificationTitle,
+                 String attachmentText, String attachmentColor) {
+    String jenkinsIcon = 'https://jenkins.io/sites/default/files/jenkins_favicon.ico'
+    String slackURL = 'https://hooks.slack.com/services/***REMOVED***'
+
+    def payload = JsonOutput.toJson([text       : notificationTitle,
+                                     username   : 'jenkins',
+                                     channel    : channel,
+                                     attachments: [[
+                                                           color      : attachmentColor,
+                                                           title      : "Job ${env.JOB_NAME} - #${env.BUILD_NUMBER}",
+                                                           title_link : env.BUILD_URL,
+                                                           text       : attachmentText,
+                                                           thumb_url  : jenkinsIcon,
+                                                           footer     : 'Jenkins',
+                                                           footer_icon: jenkinsIcon
+                                                   ]]
+    ])
+    sh "curl -sX POST --data-urlencode \'payload=${payload}\' ${slackURL}"
+}
+
+/**
+ * Stops the docker instances and remove all docker images
+ */
+void cleanDocker() {
+    echo "Clean docker"
+    sh '''
+        if [ $(docker ps |grep -v -e "^CONTAINER ID" |wc -l) -ne 0 ]; then
+          docker ps |grep -v -e "^CONTAINER ID" |awk '{print $1}' |xargs docker stop
+        fi
+        if [ $(docker ps -a |grep -v -e "^CONTAINER ID" |wc -l) -ne 0 ]; then
+          docker ps -a |grep -v -e "^CONTAINER ID" |awk '{print $1}' |xargs docker rm
+        fi
+        if [ $(docker volume ls |grep -v -e "^DRIVER" |wc -l) -ne 0 ]; then
+          docker volume ls |grep -v -e "^DRIVER" |awk '{print $2}' |xargs docker volume rm
+        fi
+        while [ $(docker images |grep -v -e "^REPOSITORY" |wc -l) -ne 0 ]
+        do
+          docker images |grep -v -e "^REPOSITORY" |awk '{print $3}' |head -n1 |xargs docker rmi -f
+        done
+'''
+}
+
+/**
+ * Return a list of normalized pair of the form [repository, branch]. It works with any prefix like
+ * refs/remotes/repo/branch, or repo/branch, etc.
+ *
+ * @param branchs a list of branch with any prefix (need at least to contain repository and branch)
+ * @param repository the name of the repository
+ * @return
+ */
+def getRepositoryBranchSplit(String[] branchs, String repository) {
+    def branchSplits = []
+    for (int i = 0; i < branchs.length; i++) {
+        def branch = branchs[i].trim()
+        if (!branch.contains(repository)) {
+            continue
+        }
+        def brancheWithRemote = branch.substring(branch.indexOf(repository))
+        branchSplits.add(brancheWithRemote.split("/"))
+    }
+    branchSplits
+}
+
+return this

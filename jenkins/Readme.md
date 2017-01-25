@@ -5,6 +5,7 @@
 * Pour développer, IntelliJ ou au minimum groovyConsole
 * Un accès au moins en read-only à github
 * Un token pour slack (OK chez LF)
+* [Installer Gradle](https://docs.gradle.org/current/userguide/installation.html#sec:prerequisites)
 
 ## Introduction to groovy
 http://groovy-lang.org/
@@ -57,49 +58,7 @@ And a list:
     myFunction 5                            // 8
     
 
-## Jenkins pipelines
-Pour ce randori, on pourra utiliser une image docker Jenkins.
-Une version maison a été poussée sur nexus, elle contient la 
-version officielle complétée d'une petite série de plugins.
 
-### Let's play in a docker
-    # Dossier dans lequel tous le workspace jenkins sera placé
-    mkdir -p $HOME/dev/jenkins/docker-home/jobs/job1
-    cp resources/firstJob.xml $HOME/dev/jenkins/docker-home/jobs/job1/config.xml
-    docker pull jenkins:alpine
-    # Déploie l'image docker de jenkins-LF dans un container docker
-    docker run -p 8080:8080 -v $HOME/dev/jenkins/docker-home/:/var/jenkins_home equ/jenkins-plugins:devel
-
-[Jenkins est déployé sur le port 8080](http://localhost:8080)
-
-**TODO** Update la commande pour récupérer l'image ??? **TODO** 
-
-### Exemple de Pipeline Jenkins
-Un premier exemple simpliste de pipeline Jenkins :
-
-    stage('etape 1'){
-        parallel(
-            firstBranch: {
-                node(){
-                    println 'toto'
-                    sh 'sleep 3'
-                }
-            },
-            secondBranch: {
-                node(){
-                    println 'toto'
-                    sh 'sleep 3'
-                }
-            }
-        )
-    }
-        
-        
-    stage('etape 2') {
-        node() {
-            println 'toto'
-        }
-    }
 
 ## Quelques points d'attention
 Jenkins permet de faire l'essentiel des fonctions groovy, et ajoute quelques fonctions, comme :
@@ -145,12 +104,34 @@ Une méthode ayant l'annotation `@NonCPS` :
 * Des tests de non-régression.
 * Extra : notifier par slack chaque auteur de la branche si celle-ci a plus d'un mois d'ancienneté.
 
-### Structure des jobs chez LF
-    TODO avec le deploy
-    
-### GitHub Configuration
-https://github.com/settings/tokens
-https://wiki.jenkins-ci.org/display/JENKINS/Github+Plugin
+
+## Jenkins pipelines
+Pour ce randori, on pourra utiliser une image docker Jenkins.
+Une version maison a été poussée sur nexus, elle contient la 
+version officielle complétée d'une petite série de plugins.
+
+### Let's play in a docker
+* Cloner le projet randori si ce n'est pas déjà fait : 
+`git clone "https://github.com/lesfurets/randori.git"`
+* Créer une branche qui part du master : `git checkout -b $USER`
+* Depuis le dossier jenkins, initialiser le workspace du futur docker (par défaut $HOME/dev/jenkins-home ):
+
+
+    mkdir -p $HOME/dev/jenkins-home/jobs/
+    # création des jobs :
+    cp -r jenkins-docker/jobs $HOME/dev/jenkins-home/
+
+
+* Récupérer l'image docker : 
+
+    # Déploie l'image docker de jenkins-LF dans un container docker
+    docker run -p 8080:8080 -v $HOME/dev/jenkins-home/:/var/jenkins_home repository.admin.courtanet.net:10443/jenkins-randori
+
+[Jenkins est déployé sur le port 8080](http://localhost:8080)
+
+* Jenkins a déjà 2 jobs :
+    * pipelineRandori sur lequel on va travailler
+    * gradleTest qui vérifie qu'il n'y a pas de régression sur le job pipelineRandori
 
 ### Trucs et astuces
 #### Obtenir l'âge d'une branche

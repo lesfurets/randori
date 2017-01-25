@@ -1,0 +1,76 @@
+#!groovy
+/**
+ * production/jenkins/src/main/jenkins/lib/scriptLoader.jenkins
+ *
+ * Workflow :
+ *   Jenkins job is configured to load this loader.
+ *   Jenkins allocates a node to checkout and load this loader.
+ *   This loader loads the job script through the configure method.
+ *   Jenkins free the lite node.
+ *   This loader calls the execute method of the job script, this job script is responsible
+ *   to allocate nodes when necessary.
+ *
+ * See details in Readme.md
+ *
+ * Script jobs must contain two methods:
+ *      imports     returns a map of all scripts required
+ *      execute     starts the job
+ */
+
+/**
+ * Load a script specified by its filename, imports all its dependencies and inject them in the context
+ * @param filename name of the script to load
+ * @return the script, with all its injected dependencies
+ */
+def configure(filename) {
+    println "Démarrage de $filename"
+    def runnable = load(filename)
+    checkIsScript(runnable, filename)
+    importAll(runnable)
+    return runnable
+}
+
+/**
+ * It is forbidden to create an arraylist from a collection in Jenkins Groovy
+ * Thus we use a dedicated method with @NonCPS annotation
+ * @param collection collection to copy
+ * @return copy of the collection
+ */
+@NonCPS
+private def createList(collection) {
+    return new ArrayList(collection)
+}
+
+/**
+ * Checks whether the job script is a script or not.
+ * A script should ends with "return this". It's easy to forget...
+ * @param script probably script
+ * @param scriptName name of the script
+ */
+private void checkIsScript(script, String scriptName) {
+    if (script == null || !(script instanceof Script)) {
+        error "Missing `return this` at the end of the script ${scriptName}"
+    }
+}
+
+/**
+ * Loads all scripts mentionned in the imports() method of the job script and inject
+ * them in the context.
+ *
+ * @param runnable
+ */
+private void importAll(runnable) {
+    Map<String, String> fileByAlias = runnable.imports()
+    List l = createList(fileByAlias.keySet())
+
+    for (int i = 0; i < l.size(); i++) {
+        String key = l.get(i)
+        String scriptFile = fileByAlias[key]
+        def script = load(scriptFile)
+        // check si c'est null
+        checkIsScript(script, scriptFile)
+        runnable."${key}" = script
+    }
+}
+
+return this

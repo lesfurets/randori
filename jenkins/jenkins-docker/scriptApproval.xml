@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<scriptApproval plugin="script-security@1.25">
+  <approvedScriptHashes/>
+  <approvedSignatures>
+    <string>method java.lang.Class isInstance java.lang.Object</string>
+    <string>new java.util.ArrayList java.util.Collection</string>
+  </approvedSignatures>
+  <aclApprovedSignatures/>
+  <approvedClasspathEntries/>
+  <pendingScripts/>
+  <pendingSignatures/>
+  <pendingClasspathEntries/>
+</scriptApproval>
