@@ -1,0 +1,9 @@
+pluginRepositories {
+    gradlePluginPortal()
+}
+
+rootProject.name = 'randori'
+
+include ':jenkins'
+
+project(':jenkins').projectDir = "$rootDir/jenkins" as File

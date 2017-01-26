@@ -7,7 +7,7 @@
 .mtj.tmp/
 
 # Package Files #
-*.jar
+#*.jar
 *.war
 *.ear
 
@@ -49,8 +49,9 @@ buildNumber.properties
 # .idea/uiDesigner.xml
 
 # Gradle:
-# .idea/gradle.xml
-# .idea/libraries
+.idea/gradle.xml
+.idea/libraries
+build/
 
 # Mongo Explorer plugin:
 # .idea/mongoSettings.xml
