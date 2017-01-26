@@ -2,20 +2,14 @@ apply plugin: 'groovy'
 
 repositories {
     maven {
-        url 'https://repository.admin.courtanet.net/repository/snapshots'
+        url 'http://repository.admin.courtanet.net/repository/snapshots'
     }
     maven {
-        url 'https://repository.admin.courtanet.net/repository/central'
+        url 'http://repository.admin.courtanet.net/repository/central'
     }
 }
 
 dependencies {
-    // compile group: 'commons-collections', name: 'commons-collections', version: '3.2.2'
     testCompile group: 'junit',         name: 'junit',                  version: '4.11'
     testCompile group: 'com.lesfurets', name: 'pipeline-test-helper',   version: '0.9+'
-//    testCompile group: 'ant',           name: 'ant',                    version: '1.6.5'
-}
-
-test {
-
 }

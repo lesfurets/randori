@@ -11,6 +11,7 @@ def execute() {
                     node(){
                         println 'toto'
                         sh 'sleep 3'
+                        println commons.cleanName('aaa')
                     }
                 },
                 secondBranch: {

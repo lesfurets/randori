@@ -150,7 +150,8 @@ version officielle complétée d'une petite série de plugins.
 
 * Jenkins a déjà 2 jobs :
     * pipelineRandori sur lequel on va travailler
-    * gradleTest qui vérifie qu'il n'y a pas de régression sur le job pipelineRandori
+    * gradleTest qui vérifie qu'il n'y a pas de régression sur le job 
+    pipelineRandori, cela revient à lancer `./gradlew build`
 
 ### Trucs et astuces
 #### Obtenir l'âge d'une branche
