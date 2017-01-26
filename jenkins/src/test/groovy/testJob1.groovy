@@ -16,17 +16,18 @@ class TestJobRandoriPipeline extends BaseRegressionTest {
     }
 
     @Test
-    void testNonRegression() {
-        def script = loadScript("src/main/job/randoriPipeline.jenkins")
-        script.execute()
-        super.testNonRegression(false)
-    }
-
-    @Test
     void testRandori() throws Exception {
         def scriptLoader = loadScript('lib/scriptLoader.jenkins')
         def script = scriptLoader.configure('job/randoriPipeline.jenkins')
         script.execute()
         printCallStack()
+        super.testNonRegression(false)
     }
+
+    @Test(expected = Exception.class)
+    void testErreurRandori() throws Exception {
+        def script = loadScript("src/main/job/randoriPipeline.jenkins")
+        script.execute()
+    }
+
 }
