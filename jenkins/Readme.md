@@ -142,10 +142,11 @@ version officielle complétée d'une petite série de plugins.
 
 * Récupérer l'image docker : 
 
-
-    # Déploie l'image docker de jenkins-LF dans un container docker
-    docker run -p 8080:8080 -v $HOME/dev/jenkins-home/:/var/jenkins_home repository.admin.courtanet.net:10443/jenkins-randori
-
+    ```bash
+# Déploie l'image docker de jenkins-LF dans un container docker
+docker login -u $USER repository.admin.courtanet.net:10443
+docker run -p 8080:8080 -v $HOME/dev/jenkins-home/:/var/jenkins_home repository.admin.courtanet.net:10443/jenkins-randori
+```
 [Jenkins est déployé sur le port 8080](http://localhost:8080)
 
 * Jenkins a déjà 2 jobs :
