@@ -1,0 +1,33 @@
+Map<String, String> imports() {
+    [
+            commons            : 'jenkins/src/main/lib/commons.jenkins'
+    ]
+}
+
+def execute() {
+    stage('etape 1'){
+        parallel(
+                firstBranch: {
+                    node(){
+                        println 'toto'
+                        sh 'sleep 3'
+                    }
+                },
+                secondBranch: {
+                    node(){
+                        println 'toto'
+                        sh 'sleep 3'
+                    }
+                }
+        )
+    }
+
+
+    stage('etape 2') {
+        node() {
+            println 'toto'
+        }
+    }
+}
+
+return this
