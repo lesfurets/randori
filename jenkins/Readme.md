@@ -166,5 +166,7 @@ docker run -p 8080:8080 -v $HOME/dev/jenkins-home/:/var/jenkins_home repository.
     # Affiche le nombre de jours d'une branche depuis Epoch
     git for-each-ref --sort=committerdate refs/heads/ --format='%(color:yellow)%(refname:short)%(color:reset) %(authorname) (%(color:green)%(committerdate:raw)%(color:reset)) (%(color:green)%(authordate:raw)%(color:reset))
 
+#### Auto-completion et Coloration Syntaxique dans Intellij
 
+Pour voir les fichiers `*.jenkins` reconnus comme du groovy : Preferences > Editor > File Types : Ajouter à Groovy le pattern `*.jenkins`
 
