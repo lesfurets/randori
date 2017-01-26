@@ -10,6 +10,8 @@ class TestJobRandoriPipeline extends BaseRegressionTest {
     @Before
     void setUp() throws Exception {
         // See https://github.com/lesfurets/pipeline-test-helper/blob/master/src/test/groovy/com/lesfurets/jenkins/TestExampleJob.groovy
+        helper.scriptRoots += 'src/main'
+        helper.baseScriptRoot = 'jenkins/'
         super.setUp()
     }
 
@@ -18,5 +20,13 @@ class TestJobRandoriPipeline extends BaseRegressionTest {
         def script = loadScript("src/main/job/randoriPipeline.jenkins")
         script.execute()
         super.testNonRegression(false)
+    }
+
+    @Test
+    void testRandori() throws Exception {
+        def scriptLoader = loadScript('lib/scriptLoader.jenkins')
+        def script = scriptLoader.configure('job/randoriPipeline.jenkins')
+        script.execute()
+        printCallStack()
     }
 }
