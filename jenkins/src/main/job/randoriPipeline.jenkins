@@ -9,8 +9,9 @@ def execute() {
         parallel(
                 firstBranch: {
                     node(){
-                        println 'toto'
-                        sh 'sleep 3'
+                        println 'tata'
+                        println 'tata'
+                        sh 'sleep 30'
                         println commons.cleanName('aaa')
                     }
                 },
