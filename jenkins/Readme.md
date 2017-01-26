@@ -1,16 +1,28 @@
-# Jenkins pipelines by LF   
+# Jenkins pipelines by LF
+
+Dans ce randori seront abordés :
+* une introduction à groovy
+* la prise en main des pipelines Jenkins
+* l'utilisation qui en est faite chez lesfurets
+* les tests de non régression sur les pipelines
 
 ## Pré-requis
 * Docker 1.13.0 minimum
 * Pour développer, IntelliJ ou au minimum groovyConsole
 * Un accès au moins en read-only à github
 * Un token pour slack (OK chez LF)
-* [Installer Gradle](https://docs.gradle.org/current/userguide/installation.html#sec:prerequisites)
+* Gradle (optionnel, seulement pour lancer des tests en local) [Guide d'installation](https://docs.gradle.org/current/userguide/installation.html#sec:prerequisites)
+
+
+    # Sur MacOs
+    brew install gradle
+    # Sur ubuntu-likes
+    apt-get install gradle
 
 ## Introduction to groovy
 http://groovy-lang.org/
 
-IntelliJ has a groovy console: Actions... / Groovy Console
+Une console groovy est disponible dans IntelliJ : `Actions` / `Groovy Console...`
 
 ### GString vs. String
 
@@ -18,9 +30,12 @@ IntelliJ has a groovy console: Actions... / Groovy Console
     GString gs = "aaa${s.length()}
     println gs // displays aaa3
     
-    """This is a multiline String
+    """This is a multiline GString
     It can be useful to write a long text
     even with string substitution like ${aaa}"""
+    
+    '''This is multiline String
+    No string substitution done here.'''
 
 ### Map and lists
 Easy way to define a map:
@@ -36,6 +51,7 @@ Easy way to define a map:
     ]
 
 And a list:
+
     List l = [1, 2, 3, 4, 5]
     l = 1..32 // much easier
     println l
@@ -55,10 +71,9 @@ And a list:
         int i = 3
         i + j
     }
-    myFunction 5                            // 8
+    println myFunction 5                            // 8
     
-
-
+### def is evil
 
 ## Quelques points d'attention
 Jenkins permet de faire l'essentiel des fonctions groovy, et ajoute quelques fonctions, comme :
@@ -113,7 +128,10 @@ version officielle complétée d'une petite série de plugins.
 ### Let's play in a docker
 * Cloner le projet randori si ce n'est pas déjà fait : 
 `git clone "https://github.com/lesfurets/randori.git"`
-* Créer une branche qui part du master : `git checkout -b $USER`
+* Créer une branche qui part du master : `git checkout -b "$USER" origin/master`
+* Remplacer `jenkins-session-1` par le nom de la branche créée à l'étape précédente dans :
+    * dans `jenkins/jenkins-docker/jobs/gradleTest/config.xml`
+    * dans `jenkins/jenkins-docker/jobs/pipelineRandori/config.xml`
 * Depuis le dossier jenkins, initialiser le workspace du futur docker (par défaut $HOME/dev/jenkins-home ):
 
 
@@ -123,6 +141,7 @@ version officielle complétée d'une petite série de plugins.
 
 
 * Récupérer l'image docker : 
+
 
     # Déploie l'image docker de jenkins-LF dans un container docker
     docker run -p 8080:8080 -v $HOME/dev/jenkins-home/:/var/jenkins_home repository.admin.courtanet.net:10443/jenkins-randori
