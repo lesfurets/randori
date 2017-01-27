@@ -5,30 +5,14 @@ Map<String, String> imports() {
 }
 
 def execute() {
-    stage('etape 1'){
-        parallel(
-                firstBranch: {
-                    node(){
-                        println 'toto'
-                        sh 'sleep 3'
-                        println commons.cleanName('aaa')
-                    }
-                },
-                secondBranch: {
-                    node(){
-                        println 'toto'
-                        sh 'sleep 3'
-                    }
-                }
-        )
-    }
-
-
-    stage('etape 2') {
         node() {
-            println 'toto'
+            stage('checkout') {
+                git 'https://github.com/lesfurets/randori.git'
+            }
+            stage('ls') {
+                sh 'ls'
+            }
         }
-    }
 }
 
 return this
