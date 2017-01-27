@@ -1,27 +1,25 @@
+
 Map<String, String> imports() {
     [
-            commons            : 'jenkins/src/main/lib/commons.jenkins'
+            commons: 'jenkins/src/main/lib/commons.jenkins',
     ]
 }
 
 def execute() {
-    stage('etape 1'){
-        parallel(
-                firstBranch: {
-                    node(){
-                        println 'tata'
-                        println 'tata'
-                        sh 'sleep 30'
-                        println commons.cleanName('aaa')
-                    }
-                },
-                secondBranch: {
-                    node(){
-                        println 'toto'
-                        sh 'sleep 3'
-                    }
-                }
-        )
+    stage('etape 1') {
+        node() {
+            println "----"
+            for (Branch br : getBranchList(getRawBrList())) {
+                println br.name
+                br.head = sh(returnStdout: true,
+                        script: "git rev-parse ${br.name}")
+                println br.head
+                br.date = sh(returnStdout: true,
+                        script: "git show -s --format=%ci ${br.head}")
+                println br.date
+            }
+            println "----"
+        }
     }
 
 
@@ -31,5 +29,33 @@ def execute() {
         }
     }
 }
+
+@NonCPS
+List<Branch> getBranchList(String rawBr) {
+    List<String> split = rawBr.split('\n')
+    List<Branch> map = split.collect{it -> new Branch(it, null, null, null)}
+    return map
+}
+
+private String getRawBrList() {
+    sh 'git fetch --all --tags --prune'
+    return sh(returnStdout: true,
+            script: 'git branch -r --sort=-committerdate').trim()
+}
+
+class Branch implements Serializable {
+    String name
+    String head
+    String user
+    String date
+
+    Branch(String name, String head, String user, Date date) {
+        this.name = name
+        this.head = head
+        this.user = user
+        this.date = date
+    }
+}
+
 
 return this
