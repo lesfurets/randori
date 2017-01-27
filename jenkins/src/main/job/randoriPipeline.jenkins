@@ -19,7 +19,7 @@ def execute() {
                         println 'toto'
                         sh 'sleep 3'
                         git branch: 'aar', url: 'https://github.com/lesfurets/randori.git'
-                        def t = sh returnStdout: true, script: 'git for-each-ref --sort=-committerdate refs/heads/'
+                        def t = sh returnStdout: true, script: 'git for-each-ref --sort=-committerdate refs/remotes/'
                         println t
                     }
                 }
