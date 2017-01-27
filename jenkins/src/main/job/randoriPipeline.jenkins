@@ -10,7 +10,7 @@ def execute() {
                 git 'https://github.com/lesfurets/randori.git'
             }
             stage('ls') {
-                sh 'ls'
+                sh 'git branch -a'
             }
         }
 }
