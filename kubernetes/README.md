@@ -31,6 +31,7 @@ curl http://localhost:8080/backends/protectplus/tarification
 # Nétoyer
 docker ps
 docker kill sha1
+# Pour l'avoir dans l'intellij depuis le monorepo : aller dans Maven Projects, "+" puis fournir le pom.xml
 ```
 
 Step2: Le déployer sur minikube (le kubernetes light local)
