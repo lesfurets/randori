@@ -1,5 +1,8 @@
 # Introduction à Kubernetes
 
+10~15min : Pour un overview rapide : https://kubernetes.io/docs/tutorials/kubernetes-basics/
+
+
 Objectif : Déployer et faire communiquer 2 microservices entre eux
 
 ## Setup
