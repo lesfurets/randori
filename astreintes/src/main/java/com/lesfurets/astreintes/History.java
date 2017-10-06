@@ -12,9 +12,8 @@ import java.util.Map;
 public class History {
 
     /**
-     * This is a randomly generated mock
+     * This is a randomly generated history
      */
-
     static Map<LocalDate, ECandidate> HISTORY = new HashMap<LocalDate, ECandidate>() {
         {
             put(LocalDate.of(2016, 10, 3), MBO);
